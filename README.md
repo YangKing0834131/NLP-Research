@@ -499,6 +499,232 @@ $$
 
 
 
+## 11.Convolutional Networks for NLP
+
+### CNN简介
+
+#### Padding
+
+n×n 的图像，f×f 的过滤器，卷积得到 (n-f+1)×(n-f+1) 的图像。
+缺点：每次卷积操作，图像会缩小；会丢失图像边缘的信息
+Padding：卷积前，在图像周围填充一圈 0.
+填充方式 valid 和 same
+valid：不填充
+same：卷积前填充，使得卷积后图像大小和卷积前相同。
+$$
+p= \frac{f-1}{2}
+$$
+
+#### 步长
+
+n×n 的图像，f×f 的过滤器，padding p, stride s, 卷积得到的图像大小为：
+$$
+\left \lfloor \frac {n+2p-f}{s} + 1\right \rfloor \times \left \lfloor \frac {n+2p-f}{s} + 1 \right \rfloor
+$$
+输入图像和过滤器的通道数必须相等，输出图像没有通道数。
+卷积层中的单元数，等于过滤器个数，等于这一层的特征数，等于特征表示的个数。
+参数数量少，避免过拟合
+
+卷积符号
+
+如果层 l 是卷积层：
+$$
+\begin{align}
+&f^{[l]} = \text{filter size}\\
+&p^{[l]} = \text{padding }\\
+&s^{[l]} = \text {stride} \\
+&n^{[l]}_c = \text {number of filters} \\
+&\text {Each filter is: } f^{[l]} \times f^{[l]} \times n^{[l-1]}_c \\
+&\text {Activation: } a^{[l]} \rightarrow n^{[l-1]}_H \times n^{[l-1]}_W \times n^{[l-1]}_c\\
+&\text {Weight: } f^{[l]} \times f^{[l]} \times n^{[l-1]}_c \times n^{[l]}_c\\
+&\text {bias: } 1 \times 1 \times 1 \times n^{[l]}_c\\ \\
+&\text {Input: } n^{[l-1]}_H \times n^{[l-1]}_W \times n^{[l-1]}_c\\
+&\text {Output: } n^{[l]}_H \times n^{[l]}_W \times n^{[l]}_c\\
+&n^{[l]}_H = \left \lfloor \frac {n^{[l-1]}_H + 2p^{[l]}-f^{[l]}}{s^{[l]}} + 1\right \rfloor
+\end{align}
+$$
+图像的**高度和宽度**会随着网络深度的增加不断减小，通道数量不断增加
+
+#### 池化层
+
+使用池化层减小特征表示的大小，加速计算，同时提高提取特征的鲁棒性。
+意义：如果区域提取到某种特征，就取其最大值。
+每个通道单独执行池化
+池化层的超参数是 f=2 和 s=2，池化方式（最大/平均池化）
+
+卷积层的意义
+
+参数共享：一个特征探测器可以重复使用在图像的每个部分
+稀疏连接：卷积层的每个单元的输出仅与部分输入有关
+
+经典卷积网络
+
+#### LeNet-5
+
+![LeNet](./img/LeNet.png)
+使用的激活函数是 sigmoid 和 tanh，使用了平均池化
+
+#### AlexNet
+
+![AlexNet](./img/AlexNet.png)
+使用的激活函数是 Relu。
+~~使用了 LRN（局部响应归一化）~~
+
+
+
+#### VGG-16
+
+![VGG-16](./img/VGG-16.png)
+固定了卷积层和池化层的大部分超参数：
+CONV=3×3 filter, s=1, same    MAX-POOL=2×2, s=2
+简化了神经网络结构。
+包含了 16 个卷积层和全连接层，1.38 亿个参数，
+规律：每次卷积的过滤器个数翻倍，每次池化图像的尺寸缩小二分之一。
+
+
+
+#### 残差网络（ResNet） 
+
+残差网络：普通网络加上跳远连接，构成残差块，就变成了残差网络。
+跳远连接（skip connection）：隐层的输出跳过中间的层，将信息传递到网络的更深层；在更深层的激活函数的输入加上浅层的输出；这几层共同构成了一个残差块。
+$$
+a^{[l+2]} = g(z^{[l+2]} + a^{[l]})
+$$
+意义：普通深度网络，随着深度的加深，训练误差会增大，因为梯度消失和梯度爆炸；残差网络会避免这种情况。
+
+
+
+#### 1×1 卷积
+
+相当于在图像上同一个位置跨 channel 进行全连接
+用来压缩信道数量
+构建瓶颈层，缩减表示规模，减少计算成本
+
+
+
+#### Inception 网络
+
+代替人工来确定卷积层中的过滤器类型，是否创建卷积层或者池化层；
+应用各种类型的过滤器，使输出的高和宽相同，然后把通道连起来
+
+./img/
+
+### 由RNN到CNN
+
+对于文本一维卷积 
+
+![1567428626843](./img/1567428626843.png)
+
+带池化的一维卷积：
+
+![1567428732833](./img/1567428732833.png)
+
+带池化3通道一维卷积：
+
+![1567429021427](./img/1567429021427.png)
+
+最大池化3通道一维卷积：
+
+![1567429116080](./img/1567429116080.png)
+
+平均池化3通道一维卷积：
+
+![1567429141423](./img/1567429141423.png)
+
+stride=2:
+
+![1567429645094](./img/1567429645094.png)
+
+
+
+局部最大池化，stride=2:
+
+![1567429826230](./img/1567429826230.png)
+
+k-max k=2
+
+![1567429900162](./img/1567429900162.png)
+
+### 单层CNN用于句子分类
+
+卷积+池化
+
+词向量：$\mathbf{x}_{i} \in \mathbb{R}^{k}$    k为词向量维度
+
+句子：$\mathbf{x}_{1 : n}=\mathbf{x}_{1} \oplus x_{2} \oplus \cdots \oplus \mathbf{x}_{n}$      （词向量拼接组成句向量）
+
+词向量连接：$\mathbf{X}_{i : i+j}$                                 
+
+卷积核：$\mathbf{w} \in \mathbb{R}^{h k}$
+
+卷积核为向量，大小可以为2/3/4等
+
+
+
+对于单通道CNN计算feature:
+$$
+c_{i}=f\left(\mathbf{w}^{T} \mathbf{x}_{i : i+h-1}+b\right)
+$$
+输入句子：
+$$
+\mathbf{x}_{1 : n}=\mathbf{x}_{1} \oplus \mathbf{x}_{2} \oplus \ldots \oplus \mathbf{x}_{n}
+$$
+窗口大小h：
+$$
+\left\{\mathbf{x}_{1 : h}, \mathbf{x}_{2 : h+1}, \ldots, \mathbf{x}_{n-h+1 : n}\right\}
+$$
+feature map：
+$$
+\mathbf{c}=\left[c_{1}, c_{2}, \dots, c_{n-h+1}\right] \in \mathbb{R}^{n-h+1}
+$$
+最大池化：
+$$
+\hat{c}=\max \{\mathbf{c}\}
+$$
+最终特征：（卷积核大小为3,4,5，每个100个feature map）
+$$
+\mathbf{z}=\left[\hat{c}_{1}, \ldots, \hat{c}_{m}\right]
+$$
+分类输出：
+$$
+y=\operatorname{softmax}\left(W^{(S)} z+b\right)
+$$
+![1567432675811](./img/1567432675811.png)
+
+论文中超参数设置：
+
+非线性：ReLU
+
+卷积核大小：3,4,5  （100 feature map）
+
+Dropout p=0.5
+
+SGD Minibatcb size:50
+
+word2vec:k=300
+
+
+
+### CNN应用翻译
+
+encoding:CNN
+
+decoding:RNN
+
+![1567434534577](./img/1567434534577.png)
+
+Character-Aware Neural Language Models
+
+基于字符级词嵌入，利用卷积、LSTM
+
+![1567434639427](./img/1567434639427.png)
+
+Very Deep Convolutional Networks for Text Classification
+
+将图像中深层次网络应用到NLP中
+
+![1567434941178](./img/1567434941178.png)
+
 ## 13.Contextual Word Embeddings
 
 词的表示方法：
@@ -538,3 +764,4 @@ Universal Language Model Fine-tuning for Text Classification
 #### Transformer
 
 #### BERT
+
